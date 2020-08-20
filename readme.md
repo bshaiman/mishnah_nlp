@@ -1,4 +1,6 @@
 # Topic Modeling the Mishnah
+->***“What was Rabbi Akiva like? He was like a laborer who took up his basket and went out. Finding wheat, he put it in. Finding barley, he put it in. Finding spelt, he put it in. Finding lentils, he put them in. Upon arriving at his home he sorted the wheat on its own, the barley on its own, the beans on their own, and the lentils on their own. Thus did Rabbi Akiva proceed when he made the entire Torah into links upon links.“***  
+-Avot d’Rabbi Natan A:18, 34A (late 3rd Century CE Midrash)<-  
 ### ***What is the Mishnah?***  
 Good question. The mishnah is not easily defined, and to do it justice it is a good idea to put it in its historical context.  
 Before the first century CE, the jewish faith was extremely different. It was still, in practice, the simple bronze-age city-cult of Jerusalem. A sacrificial state religion centered on a single temple in what is now Israel/Palestine. Its practice was primarily based on adherence to certain already-established dietary, moral, and practical restrictions, as well as tithing to the ruling dynasty and a small tribe of priests who administered the temple.  
@@ -77,7 +79,7 @@ Regarding sacrificial rites, the Temple, and the dietary laws.
 Pertaining to the laws of purity and impurity, including the impurity of the dead, the laws of food purity and bodily purity.  
 - **Keilim** ("Vessels"); deals with a large array of various utensils and how they fare in terms of purity. 30 chapters, the longest in the Mishnah.  
 - **Oholot** ("Tents"); deals with the uncleanness from a corpse and its peculiar property of defiling people or objects either by the latter "tenting" over the corpse, or by the corpse "tenting" over them, or by the presence of both corpse and person or object under the same roof or tent.  
-- **Nega'im** (נגעים "Plagues"); deals with the laws of the tzaraath.  
+- **Nega'im** ("Plagues"); deals with the laws of the tzaraath.  
 - **Parah** ("Cow"); deals largely with the laws of the Red Heifer (Para Adumah).  
 - **Tohorot** ("Purities"); deals with miscellaneous laws of purity, especially the actual mechanics of contracting impurity and the laws of the impurity of food.  
 - **Mikva'ot** ("Ritual Baths"); deals with the laws of the mikveh.  

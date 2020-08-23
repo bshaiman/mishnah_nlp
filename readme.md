@@ -1,6 +1,6 @@
 # Topic Modeling the Mishnah
-->***“What was Rabbi Akiva like? He was like a laborer who took up his basket and went out. Finding wheat, he put it in. Finding barley, he put it in. Finding spelt, he put it in. Finding lentils, he put them in. Upon arriving at his home he sorted the wheat on its own, the barley on its own, the beans on their own, and the lentils on their own. Thus did Rabbi Akiva proceed when he made the entire Torah into links upon links.“***  
--Avot d’Rabbi Natan A:18, 34A (late 3rd Century CE Midrash)<-  
+***“What was Rabbi Akiva like? He was like a laborer who took up his basket and went out. Finding wheat, he put it in. Finding barley, he put it in. Finding spelt, he put it in. Finding lentils, he put them in. Upon arriving at his home he sorted the wheat on its own, the barley on its own, the beans on their own, and the lentils on their own. Thus did Rabbi Akiva proceed when he made the entire Torah into links upon links.“***  
+-Avot d’Rabbi Natan A:18, 34A (late 3rd Century CE Midrash)  
 ### ***What is the Mishnah?***  
 Good question. The mishnah is not easily defined, and to do it justice it is a good idea to put it in its historical context.  
 Before the first century CE, the jewish faith was extremely different. It was still, in practice, the simple bronze-age city-cult of Jerusalem. A sacrificial state religion centered on a single temple in what is now Israel/Palestine. Its practice was primarily based on adherence to certain already-established dietary, moral, and practical restrictions, as well as tithing to the ruling dynasty and a small tribe of priests who administered the temple.  
@@ -90,4 +90,54 @@ Pertaining to the laws of purity and impurity, including the impurity of the dea
 - **Yadayim** ("Hands"); deals with a Rabbinic impurity related to the hands.
 - **Uktzim** ("Stalks"); deals with the impurity of the stalks of fruit.
 
-##### For the purposes of this study I will use the english translation supplied by Sefaria.org. Some terms are left as hebrew to english transliteration, and I will attempt to retain these and use them to make sense as best I can.
+##### For the purposes of this study I will use the english translation supplied by Sefaria.org. Some terms are left as hebrew to english transliteration, and I will attempt to retain these and use them to make sense as best I can.  
+
+## Part 1 - Web-Scraping  and Cleaning  
+Because the study of the mishnah, and its commentaries is still very much alive and well amongst various Jewish communities, there are several digital resources with a variety of translations. I used the base sefaria translation by professors Joshua Kulp at Israel's Bar-Ilan University. It is exceptional for its inclusion of parenthetical clarrification of indefinite pronouns, jargon, and hebrew terms.  
+On Sefaria.org, the tractates of the mishnah are laid out in a table, so it is a simple task to use Beautiful Soup to loop through the first 64 links, corresponding to the 64 tractates of the mishnah. First, we need to bring in the packages I will use:
+<pre><code>
+from bs4 import BeautifulSoup
+from IPython.core.display import display, HTML 
+from collections import defaultdict
+import pandas as pd
+import numpy as np
+import spacy
+import requests
+import re
+</code></pre>  
+Then it is a simple matter of setting up the code to pull the links and their pages' information, and use them to populate a series of numpy arrays:  
+<pre><code>
+url = 'https://www.sefaria.org/texts/Mishnah'
+response = requests.get(url)
+#Already checked that response gives us a 200 status_code
+page = response.text
+soup = BeautifulSoup(page, "lxml")
+soup = soup.find_all('td')
+tractates = []
+chapters = []
+mishnaot = []
+texts = []
+for i in range(0,63):
+    tractate = soup[i].find(class_='en').text
+    print(tractate)
+    link = soup[i].find('a')
+    link = 'https://www.sefaria.org'+link['href']
+    link = link[:-1]
+    chapter = 1
+    while requests.get(link+str(chapter)+'?lang=en'):
+        response = requests.get(link+str(chapter)+'?lang=en')
+        page = response.text
+        tractate_soup = BeautifulSoup(page, "lxml").find_all('p',class_='en')
+        for mishnah,text in enumerate(tractate_soup):
+            tractates.append(tractate)
+            chapters.append(chapter)
+            mishnaot.append(mishnah+1)
+            texts.append(text.text)
+        chapter+=1
+</code></pre>  
+I then formed a Pandas dataframe out of these arrays:  
+<pre><code>
+mishnah_df = pd.DataFrame(np.array([tractates,chapters,mishnaot,texts]).T)
+mishnah_df.columns = ['tractate','chapter','mishnah','text']
+mishnah_df.tractate = mishnah_df.tractate.apply(lambda row: row.strip())
+</code></pre>  

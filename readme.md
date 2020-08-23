@@ -92,7 +92,7 @@ Pertaining to the laws of purity and impurity, including the impurity of the dea
 
 ##### For the purposes of this study I will use the english translation supplied by Sefaria.org. Some terms are left as hebrew to english transliteration, and I will attempt to retain these and use them to make sense as best I can.  
 
-## Part 1 - Web-Scraping  and Cleaning  
+## Part 1 - Web-Scraping  and Pre-Processing  
 Because the study of the mishnah, and its commentaries is still very much alive and well amongst various Jewish communities, there are several digital resources with a variety of translations. I used the base sefaria translation by professors Joshua Kulp at Israel's Bar-Ilan University. It is exceptional for its inclusion of parenthetical clarrification of indefinite pronouns, jargon, and hebrew terms.  
 On Sefaria.org, the tractates of the mishnah are laid out in a table, so it is a simple task to use Beautiful Soup to loop through the first 64 links, corresponding to the 64 tractates of the mishnah. First, we need to bring in the packages I will use:
 <pre><code>
@@ -141,3 +141,115 @@ mishnah_df = pd.DataFrame(np.array([tractates,chapters,mishnaot,texts]).T)
 mishnah_df.columns = ['tractate','chapter','mishnah','text']
 mishnah_df.tractate = mishnah_df.tractate.apply(lambda row: row.strip())
 </code></pre>  
+At this stage I also grouped the tractates into their respective orders ("Sedarim"), the higher-level grouping of the mishnah. Luckily, the mishnah is not very long, only 4,083 documents, ranging from half a dozen to a score of sentences. Therefore using a static csv file made sense for the needs of this project.  
+I then went about some cleaning operations:
+##### Handling Names:  
+One problem with the form of the text was the inconsistency of certain names. These would become critical for later analyses, so I decided to handle it at this stage. Through my own domain knowledge and a few physical resources, it was easy to compile a list of names, review their spelling permutations in the documents, and choose single standardized versions. I then replaced other spellings of the names I found with my standardized version.  
+I then created spacy-docs out of my documents, applying over the whole data frame:
+<pre><code>
+df['spacy_doc'] = list(nlp.pipe(df.text))
+</code></pre>  
+When considering the length of this corpus, it quickly became apparent that lemmatization, breaking words down into base grammatical forms would be usefull. Thereby common terms like 'say' and 'said' would nont be unnecessarily parsed as different. Since some untranslated Hebrew terms would get interpreted as proper nouns, I made sure to also leave these terms out of the process.  
+## Part 2 - Topic Modeling  
+For topic modling I had to bring in a couple of more packages:
+<pre><code>
+from scipy.sparse import coo_matrix, csr_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
+</code></pre>
+These would provide critical functionality for processing the corpus before implementing a vectorizer, and visualization.  
+***Note*** that I had already loaded in my data as:  
+<pre><code>
+df = pd.read_csv('mishnah.csv')
+</code></pre>
+To show my process in topic modeling, I used the entire corpus, first. At this stage I was looking to see if I could accurately group the texts into their 6 super-categories, as outlined in the introduction. After some trial and error regarding topic interpretability, I decided on a max_df of 5%. Without this step, too many terms that are common amongst too many documents would come as the most ciritcal terms for grouping. 
+<pre><code>
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.decomposition import NMF
+#Setting up the vectorizer
+cv = TfidfVectorizer(stop_words=final_stop,ngram_range=(1,2),max_df = 0.05)
+#Transforming the full corpus dataset using the vectorizer
+X = cv.fit_transform(df.tokens)
+#Re-forming my TFIDF vectorizer as a dataframe with words as columns
+tfidf = pd.DataFrame(X.toarray(), columns=cv.get_feature_names())
+print('got tfidf\n')
+#Inserting this dataframe into a sparse matrix
+sparse_mtx = csr_matrix(tfidf.values)
+print('got sparse matrix\n')
+words = tfidf.columns
+from sklearn.decomposition import NMF
+#Setting up my non-negative factorization to default to 6 components, corresponding to the 6 super-topics
+model = NMF(n_components=6, init='random', random_state=0, max_iter = 2000)
+#Transforming by that model
+doc_topics = model.fit_transform(sparse_mtx)
+print('fit nmf\n')
+#Getting the top words for each topic
+t = model.components_.argsort(axis=1)[:,-1:-9:-1]
+topic_words = [[words[e] for e in l] for l in t]
+topic_words
+</code></pre>
+This produced an output like:
+<pre><code>
+[['domain',
+  'sell',
+  'field',
+  'pay',
+  'cubit',
+  'public',
+  'tree',
+  'public domain'],
+ ['susceptible',
+  'susceptible impurity',
+  'susceptible uncleanness',
+  'midra',
+  'midra uncleanness',
+  'susceptible midra',
+  'corpse uncleanness',
+  'metal'],
+ ['become unclean',
+  'handbreadth',
+  'remain clean',
+  'hive',
+  'touch',
+  'oven',
+  'size',
+  'everything'],
+ ['brother',
+  'marry',
+  'halitzah',
+  'sister',
+  'husband',
+  'perform',
+  'daughter',
+  'perform halitzah'],
+ ['vow',
+  'nazirite',
+  'beth',
+  'annul',
+  'benefit',
+  'konam',
+  'behold',
+  'behold nazirite'],
+ ['slaughter',
+  'offer',
+  'hatat',
+  'defile',
+  'burn',
+  'outside',
+  'sacrilege',
+  'sprinkle']]
+</code></pre>
+Now, you are going to hve to beleive me that many of these terms to mean something to someone familiar with Mishanh. For instance, the first group with the terms 'field', 'tree', and 'cubit' (an ancient unit of measurement) would unmistakably correspond to the order 'Zeraim', agircultural law. Likewise with the second group and 'Tohorot', the laws of impurity. Using this basic process of elimenation, I then assign an order to the topics, corresponding to the order of lists of terms rendered above:
+<pre><code>
+predicted_topics = []
+topic_assignments = ['Zeraim','Toharot','Moed','Nashim','Nezikin','Kadoshim']
+</code></pre>
+I then looped through the array of document-topic weights and assigned each document a topic based on which topic was found to have the most weight in each document based on term frequency:
+<pre><code>
+for doc in doc_topics:
+    predicted_topics.append(topic_assignments[np.argmax(doc)])
+</code></pre>
+Then, to compare my predictions to the actual topics, I did a simple element-wise comparison between the topics in the base dataframe, and those that I had just assigned:
+<pre><code>
+rights = (df.seder==predicted_topics).values
+</code></pre>

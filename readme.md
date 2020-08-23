@@ -281,4 +281,15 @@ tsne_lda = tsne_model.fit_transform(arr)
 </code></pre>
 I then plotted the two new dimensions rendered by this algorithm. Here documents are colored by assigned topics, and marked with x's for correct assignments, and circles for wrong ones:
 ![Full Mishnah Clustering](visualizations/mishnah_full_tsne_clusters.png)  
-It showed my basic assumption to be correct. For some few, this unsupervised framework was working relatively well, but for others, where the difference between a clear match to one topic versus another became fuzzy, the framework broke down. 
+It showed my basic assumption to be correct. For some few, this unsupervised framework was working relatively well, but for others, where the difference between a clear match to one topic versus another became fuzzy, the framework broke down. You might also notice that 'Zeraim', which purportedly had 70% accuracy under this framework, is shown in blue. And a large part of the middle, ambiguous collection of documents is colored blue. This is indication that a large problem with this framework is the ballancing of topics, with some being given overly-wide brushes.  
+#### Supervised Framework  
+I then set out to see how far traditional classifcation could take this problem. I set up a framework where instead of human-assisted unsupervised learning, I would implement a supervised learning technique. I performed a train-test split on the data, ballanced according to the weights of each super-topic in the corpus, and set up a loop. In this loop I simply re-formed my NMF model while ammending a single variable:
+<pre><code>
+for n in [1,2,4,11,25,50,100]:
+    model = NMF(n_components=n, init='random', random_state=0, max_iter = 2000)
+    X_train = model.fit_transform(X_train)
+    X_test = model.transform(X_test)
+</code></pre>
+As you can see, the variable in question is the number of components. The idea here is to imitate a more traditional basic classification framework. The problem with attempting to regress on high-dimensional data is that often the actual information gain from this data, rather than improving performance, shows diminishing returns. Sometimes it even reflects a potential concavity in accuracy. Therefore I set about repeating this classification with more and more dimensions to the predictor data to illustrate this problem. I performed this same classification with various models and tracked their performance over the different number of features:
+![Full Mishnah ACC](visualizations/mishnah_full_acc.png)  
+And as we can see, after the first couple-dozen features, the preformance gain becomes negligible. Indeed, it maxes out in the mid-60th percentile. 

@@ -292,4 +292,5 @@ for n in [1,2,4,11,25,50,100]:
 </code></pre>
 As you can see, the variable in question is the number of components. The idea here is to imitate a more traditional basic classification framework. The problem with attempting to regress on high-dimensional data is that often the actual information gain from this data, rather than improving performance, shows diminishing returns. Sometimes it even reflects a potential concavity in accuracy. Therefore I set about repeating this classification with more and more dimensions to the predictor data to illustrate this problem. I performed this same classification with various models and tracked their performance over the different number of features:
 ![Full Mishnah ACC](visualizations/mishnah_full_acc.png)  
-And as we can see, after the first couple-dozen features, the preformance gain becomes negligible. Indeed, it maxes out in the mid-60th percentile. 
+And as we can see, after the first couple-dozen features, the preformance gain becomes negligible. Indeed, it maxes out in the mid-60th percentile.  
+If you would like to see a more in-depth look at this framework for the corpus' sub-topics, you can find them in the [topic-models](/topic_models/) folder. All of the notebooks are the same in this folder, simply reflecting different input data. 

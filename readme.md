@@ -239,7 +239,7 @@ This produced an output like:
   'sacrilege',
   'sprinkle']]
 </code></pre>
-Now, you are going to hve to beleive me that many of these terms to mean something to someone familiar with Mishanh. For instance, the first group with the terms 'field', 'tree', and 'cubit' (an ancient unit of measurement) would unmistakably correspond to the order 'Zeraim', agircultural law. Likewise with the second group and 'Tohorot', the laws of impurity. Using this basic process of elimenation, I then assign an order to the topics, corresponding to the order of lists of terms rendered above:
+Now, you are going to have to beleive me that many of these terms to mean something to someone familiar with Mishanh. For instance, the first group with the terms 'field', 'tree', and 'cubit' (an ancient unit of measurement) would unmistakably correspond to the order 'Zeraim', agircultural law. Likewise with the second group and 'Tohorot', the laws of impurity. Using this basic process of elimenation, I then assign an order to the topics, corresponding to the order of lists of terms rendered above:
 <pre><code>
 predicted_topics = []
 topic_assignments = ['Zeraim','Toharot','Moed','Nashim','Nezikin','Kadoshim']
@@ -253,3 +253,19 @@ Then, to compare my predictions to the actual topics, I did a simple element-wis
 <pre><code>
 rights = (df.seder==predicted_topics).values
 </code></pre>
+The ScikitLearn framework makes it exceedingly easy to tese accuracy of clasffication techniques. Using the true array of topics, and the topic-assignments as I had made them, I got a score of my accuracy as well as a Seaborn heatmap to see what was going well and what was not:
+<pre><code>
+from sklearn.metrics import accuracy_score,precision_score,recall_score,confusion_matrix
+print('Accuracy: {}'.format(accuracy_score(df.seder,predicted_topics)))
+print('Precision: {}'.format(precision_score(df.seder,predicted_topics,average='weighted')))
+print('Recall: {}'.format(recall_score(df.seder,predicted_topics,average='weighted')))
+c_mat = confusion_matrix(df.seder,predicted_topics,normalize='true')
+plt.figure(figsize=(10,10))
+sns.heatmap(c_mat, cmap=plt.cm.Blues, annot=True, square=True,
+           xticklabels=df.seder.unique(),
+           yticklabels=df.seder.unique())
+plt.xlabel('Predicted Seder')
+plt.ylabel('Actual Seder')
+</code></pre>
+This output:  
+![Full Mishnah Heatmap](visualizations/mishnah_full_heatmap.png)

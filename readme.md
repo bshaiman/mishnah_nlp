@@ -162,7 +162,7 @@ These would provide critical functionality for processing the corpus before impl
 <pre><code>
 df = pd.read_csv('mishnah.csv')
 </code></pre>
-#### Unsuperised Framework
+#### Unsupervised Framework
 To show my process in topic modeling, I used the entire corpus, first. At this stage I was looking to see if I could accurately group the texts into their 6 super-categories, as outlined in the introduction. After some trial and error regarding topic interpretability, I decided on a max_df of 5%. Without this step, too many terms that are common amongst too many documents would come as the most ciritcal terms for grouping. 
 <pre><code>
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -279,6 +279,6 @@ topic_num = np.argmax(doc_topics, axis=0)
 tsne_model = TSNE(n_components=2, verbose=1, random_state=0, angle=.99, init='pca')
 tsne_lda = tsne_model.fit_transform(arr)
 </code></pre>
-I then plotted the two new dimensions rendered by this algorithm:
+I then plotted the two new dimensions rendered by this algorithm. Here documents are colored by assigned topics, and marked with x's for correct assignments, and circles for wrong ones:
 ![Full Mishnah Clustering](visualizations/mishnah_full_tsne_clusters.png)  
 It showed my basic assumption to be correct. For some few, this unsupervised framework was working relatively well, but for others, where the difference between a clear match to one topic versus another became fuzzy, the framework broke down. 

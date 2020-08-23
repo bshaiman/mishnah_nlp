@@ -162,6 +162,7 @@ These would provide critical functionality for processing the corpus before impl
 <pre><code>
 df = pd.read_csv('mishnah.csv')
 </code></pre>
+#### Unsuperised Framework
 To show my process in topic modeling, I used the entire corpus, first. At this stage I was looking to see if I could accurately group the texts into their 6 super-categories, as outlined in the introduction. After some trial and error regarding topic interpretability, I decided on a max_df of 5%. Without this step, too many terms that are common amongst too many documents would come as the most ciritcal terms for grouping. 
 <pre><code>
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -253,7 +254,7 @@ Then, to compare my predictions to the actual topics, I did a simple element-wis
 <pre><code>
 rights = (df.seder==predicted_topics).values
 </code></pre>
-The ScikitLearn framework makes it exceedingly easy to tese accuracy of clasffication techniques. Using the true array of topics, and the topic-assignments as I had made them, I got a score of my accuracy as well as a Seaborn heatmap to see what was going well and what was not:
+The ScikitLearn framework makes it exceedingly easy to test accuracy of clasffication techniques. Using the true array of topics, and the topic-assignments as I had made them, I got a score of my accuracy as well as a Seaborn heatmap to see what was going well and what was not:
 <pre><code>
 from sklearn.metrics import accuracy_score,precision_score,recall_score,confusion_matrix
 print('Accuracy: {}'.format(accuracy_score(df.seder,predicted_topics)))
@@ -268,4 +269,16 @@ plt.xlabel('Predicted Seder')
 plt.ylabel('Actual Seder')
 </code></pre>
 This output:  
-![Full Mishnah Heatmap](visualizations/mishnah_full_heatmap.png)
+![Full Mishnah Heatmap](visualizations/mishnah_full_heatmap.png)  
+Obviously this had some problems. The overwhelming one was that there was simply too much dispersion within topics. This makes sense in the context of the Mishnah. The order 'Moed' for example, covers all major Jewish holidays, whose prcatices are varied and multifarious. But this was not telling the whole story, and using even more dimensionality reduction, I could go deeper.  
+I brought in the t-SNE tool from ScikitLearn, which is purpose built to visualize high-dimensional data. Essentially, it further reduced the dimensionality of my topic-data to two, which are easily visualizable:
+<pre><code>
+from sklearn.manifold import TSNE
+arr = pd.DataFrame(doc_topics)
+topic_num = np.argmax(doc_topics, axis=0)
+tsne_model = TSNE(n_components=2, verbose=1, random_state=0, angle=.99, init='pca')
+tsne_lda = tsne_model.fit_transform(arr)
+</code></pre>
+I then plotted the two new dimensions rendered by this algorithm:
+![Full Mishnah Clustering](visualizations/mishnah_full_tsne_clusters.png)  
+It showed my basic assumption to be correct. For some few, this unsupervised framework was working relatively well, but for others, where the difference between a clear match to one topic versus another became fuzzy, the framework broke down. 

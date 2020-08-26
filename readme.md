@@ -321,4 +321,4 @@ full = pairwise_similarity.toarray()
 full = full[np.triu_indices(len(full), k = 1)]
 </code></pre>
 You can confirm for yourself that the simple version of cosine similarity over a vectorized corpus is just its product with its own transpose. This gives me a matrix of every document's similarity with every other. I average this and assign that number as the "agreement score" for each text in the mishnah. I then plot this as a rolling average over the corpus. This is simply because it would be hard to visualize over the 4,083 documents, and I am really looking not just for the most contentious documents, but the most contentious sections:
-![Agreement](mishnah_agreement.png)
+![Agreement](visualizations/mishnah_agreement.png)

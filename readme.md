@@ -293,4 +293,32 @@ for n in [1,2,4,11,25,50,100]:
 As you can see, the variable in question is the number of components. The idea here is to imitate a more traditional basic classification framework. The problem with attempting to regress on high-dimensional data is that often the actual information gain from this data, rather than improving performance, shows diminishing returns. Sometimes it even reflects a potential concavity in accuracy. Therefore I set about repeating this classification with more and more dimensions to the predictor data to illustrate this problem. I performed this same classification with various models and tracked their performance over the different number of features:
 ![Full Mishnah ACC](visualizations/mishnah_full_acc.png)  
 And as we can see, after the first couple-dozen features, the preformance gain becomes negligible. Indeed, it maxes out in the mid-60th percentile.  
-If you would like to see a more in-depth look at this framework for the corpus' sub-topics, you can find them in the [topic-models](/topic_models/) folder. All of the notebooks are the same in this folder, simply reflecting different input data. 
+If you would like to see a more in-depth look at this framework for the corpus' sub-topics, you can find them in the [topic-models](/topic_models/) folder. All of the notebooks are the same in this folder, simply reflecting different input data.  
+## Part 3 - "There's a disagreement about that..."  
+One of the most consistent aspects of the mishnah is that of disagreement. Because the mishnah is really just a collection of quotations, rulings, and anecdotes, grouped by topic, there are often differences of opinion. Some times, these are simple: "Rabbi A says one must wait 3 hours between eating milk and meat," "Rabbi B says one must wait 5 hours between eating milk and meat." and so on. Some are much more complicated however. Using the tools of natural language processing I can begin to understand just how much contention there is in my documents.
+#### Lexical Dispersion  
+By re-building my dataset to have another category of quoted names, I can easily build an index about what rabbis are quoted where. I looped through the dataframe, dropping the text, and formed document-index Rabbi pairs. With this done, I could easily track the most-cited sources in the Mishnah using this code:
+<pre><code>
+plt.figure(figsize=(20,5))
+counts = mentions.rabbi.value_counts()
+sns.barplot(x=counts.index[1:20],y=counts[1:20])
+plt.xticks(rotation=40,fontsize=11)
+plt.ylabel('Count',fontsize=15)
+plt.title('Distribution of Rabbis',fontsize=25)
+</code></pre>
+This output:
+![Top Rabbis](visualizations/mishnah_top_10.png)
+But the resources available in Python allow for better. Using the stripplot functionality of Seaborn, I can track lexical dispersion of each of the most-cited Rabbis:
+![Lexical Dispersion](visualizations/mishnah_lexical_dispersion.png)
+This illustrates some of the clustering of more contentions sections, but it is not perfect. Better yet, I simply tracked the number of sources mentioned by name in each documents, and tracked this over the entire corpus. The idea being that the mishnah only cites multiple sources when there is a potential disagreement:  
+![Number of Rabbis](visualizations/mishnah_rabbi_num.png)
+#### Statement Similarity  
+The form of the mishnah allows for greater granularity however. Statements are often bound by statements like "Rabbi A says", "Rabbi B says," etc. Therefore, by tracking certain pre-words, and my pre-compiled list of named sources, I put together a small algorithm to isolate attributed statements within the documents. I then have intra-document lists of statements. I make each of these its own, mini-corpus, and vectorize it:
+<pre><code>
+tfidf = TfidfVectorizer().fit_transform(docs)
+pairwise_similarity = tfidf * tfidf.T
+full = pairwise_similarity.toarray()
+full = full[np.triu_indices(len(full), k = 1)]
+</code></pre>
+You can confirm for yourself that the simple version of cosine similarity over a vectorized corpus is just its product with its own transpose. This gives me a matrix of every document's similarity with every other. I average this and assign that number as the "agreement score" for each text in the mishnah. I then plot this as a rolling average over the corpus. This is simply because it would be hard to visualize over the 4,083 documents, and I am really looking not just for the most contentious documents, but the most contentious sections:
+![Agreement](mishnah_agreement.png)
